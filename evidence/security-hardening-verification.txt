@@ -1,0 +1,48 @@
+========================================================================
+PROJECT 03 — SECURITY HARDENING BASELINE LAB (VERIFICATION LOG)
+========================================================================
+ 
+=== 1. SERVER-LEVEL SECURITY BASELINE ===
+Configuration option 'show advanced options' changed from 1 to 1. Run the RECONFIGURE statement to install.
+Action: Disabled [sa] login.
+
+Surface-area configurations verified:
+- Ad Hoc Distributed Queries   : 0 (PASS - Disabled)
+- cross db ownership chaining  : 0 (PASS - Disabled)
+- Ole Automation Procedures    : 0 (PASS - Disabled)
+- xp_cmdshell                  : 0 (PASS - Disabled)
+- remote admin connections     : 0 (INFO - Local DAC)
+
+=== 2. LEAST-PRIVILEGE ROLES & ACCESS TESTS (FIXED: NO DENY CONTROL) ===
+Current user context: dbo | Login: [Domain\SysAdminUser]
+PASS [db_reporting]: SELECT succeeded (rows=1).
+PASS [db_reporting]: UPDATE blocked -> Msg 229: The UPDATE permission was denied on the object 'Users', database 'StackOverflow2010', schema 'dbo'.
+PASS [db_application]: UPDATE succeeded.
+PASS [db_application]: ALTER TABLE blocked -> Msg 1088: Cannot find the object "Users" because it does not exist or you do not have permissions.
+PASS [db_support]: VIEW DEFINITION succeeded (proc length=188).
+PASS [db_support]: DELETE blocked -> Msg 229: The DELETE permission was denied on the object 'Users', database 'StackOverflow2010', schema 'dbo'.
+
+=== 3. ORPHANED USER REMAPPING (FIXED WITH COLLATE DATABASE_DEFAULT) ===
+Action: Executed ALTER USER [app_legacy_svc] WITH LOGIN = [app_legacy_svc].
+Status: FIXED (SIDs match between sys.database_principals and sys.server_principals)
+
+=== 4. TDE & ENCRYPTED BACKUP (SecVaultLab) ===
+Created Database Master Key in master.
+Created Server Certificate TDECert_2026.
+Backed up TDECert_2026.cer and TDECert_2026.pvk to C:\SQLBackup\Certs\.
+Processed 408 pages for database 'SecVaultLab', file 'SecVaultLab' on file 1.
+Processed 1 pages for database 'SecVaultLab', file 'SecVaultLab_log' on file 1.
+BACKUP DATABASE successfully processed 409 pages in 0.087 seconds (36.654 MB/sec).
+
+=== 5. SQL SERVER AUDIT ===
+Server Audit DBA_Lab_Audit and DBA_Lab_Server_Spec active in C:\SQLAudit\*.sqlaudit.
+
+=== 6. UK GDPR — DYNAMIC DATA MASKING ===
+DBA (Unmasked):
+  1 | Amelia Clarke | amelia.clarke@nhs.uk   | QQ123456C     | 48500.00
+  2 | Oliver Patel  | o.patel@barclays.co.uk | AB987654D     | 62000.00
+db_reporting (Masked):
+  1 | AXXXXe        | aXXX@XXXX.com          | QQ-XX-XX-XX-C | 0.00
+  2 | OXXXXl        | oXXX@XXXX.com          | AB-XX-XX-XX-D | 0.00
+
+Completion time: 2026-10-17T21:30:42.3659838+01:00

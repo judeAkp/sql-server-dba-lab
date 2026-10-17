@@ -324,6 +324,92 @@ GO
 
 ---
 
+## `DENY CONTROL` vs `DENY ALTER` — Why `DENY CONTROL ON SCHEMA::dbo` broke `SELECT` (`Msg 229`)
+
+**Context:** creating the `db_application` role in Project 03 to allow CRUD (`SELECT, INSERT, UPDATE, DELETE`) while preventing schema modifications.
+
+**Symptom:**
+
+```
+Msg 229, Level 14, State 5
+The SELECT permission was denied on the object 'Users', database 'StackOverflow2010', schema 'dbo'.
+```
+
+**Diagnosis:** the initial role script ran:
+
+```sql
+GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::dbo TO db_application;
+DENY ALTER, CONTROL ON SCHEMA::dbo TO db_application;
+```
+
+In SQL Server's permission hierarchy, **`CONTROL` is an umbrella permission that implies every permission on that securable — including `SELECT`, `INSERT`, `UPDATE`, and `DELETE`**. Because `DENY` always overrides `GRANT`, denying `CONTROL` on `SCHEMA::dbo` implicitly denied `SELECT` and `UPDATE` as well.
+
+**Fix:** revoke the `CONTROL` deny and only deny `ALTER` on the schema:
+
+```sql
+REVOKE CONTROL ON SCHEMA::dbo FROM db_application;
+DENY ALTER ON SCHEMA::dbo TO db_application;
+```
+
+**Interview value:** "Does `DENY CONTROL` only block ownership changes?" — No! Denying `CONTROL` denies *all* child permissions covered by `CONTROL`, including `SELECT`. To block DDL while allowing CRUD, simply grant `SELECT, INSERT, UPDATE, DELETE` (and optionally `DENY ALTER`).
+
+---
+
+## `Msg 262` (`SHOWPLAN permission denied`) & Unreverted `EXECUTE AS USER` Session Trap (`Msg 15151`)
+
+**Context:** testing least-privilege database roles in SSMS using `EXECUTE AS USER = N'usr_reporting'; ... REVERT;` right after completing Project 02 query tuning.
+
+**Symptom:**
+
+```
+Msg 262, Level 14, State 4
+SHOWPLAN permission denied in database 'StackOverflow2010'.
+```
+
+Followed on the next run by:
+
+```
+Msg 15151, Level 16, State 1
+Cannot find the schema 'dbo', because it does not exist or you do not have permission.
+```
+
+**Diagnosis:** two interacting behaviours:
+1. **"Include Actual Execution Plan" (`Ctrl + M`) was still toggled on in SSMS** from Project 02. When `Ctrl + M` is active, SSMS sends `SET STATISTICS XML ON`. While impersonating `usr_reporting` (a read-only role without `SHOWPLAN`), SQL Server blocked the query with `Msg 262` because generating an execution plan requires `SHOWPLAN`.
+2. **Unreverted impersonation context:** When `Msg 262` aborted the batch *before* the `REVERT;` line ran, the SSMS tab remained impersonating `usr_reporting`! Running the next administrative script in that same tab failed with `Msg 15151` because the session was still running as `usr_reporting` rather than `dbo`/`sysadmin`.
+
+**Fix:**
+1. Disable `SET STATISTICS XML OFF;` and start impersonation test scripts with `REVERT;` so any leftover impersonation context is cleared first.
+2. Verify current context with `SELECT USER_NAME() AS db_user, SUSER_SNAME() AS login_name;`.
+
+---
+
+## `Msg 468` — Collation conflict between `Latin1_General_CI_AS` and `SQL_Latin1_General_CP1_CI_AS`
+
+**Context:** joining `sys.database_principals` in `StackOverflow2010` to `sys.server_principals` in `master` to verify orphaned user remapping.
+
+**Symptom:**
+
+```
+Msg 468, Level 16, State 9
+Cannot resolve the collation conflict between "Latin1_General_CI_AS" and "SQL_Latin1_General_CP1_CI_AS" in the equal to operation.
+```
+
+**Diagnosis:** a classic UK SQL Server issue. A SQL Server instance installed on a UK Windows locale (`en-GB`) defaults to server collation **`Latin1_General_CI_AS`**, whereas `StackOverflow2010` (created in the US) uses database collation **`SQL_Latin1_General_CP1_CI_AS`**. Joining character columns across database and server catalog views (or joining user tables to `#temp` tables in `tempdb`) fails unless the collation is unified.
+
+**Fix:** add `COLLATE DATABASE_DEFAULT` to both sides of the string comparison:
+
+```sql
+SELECT dp.name, dp.sid, sp.sid
+FROM sys.database_principals dp
+JOIN sys.server_principals sp
+    ON dp.name COLLATE DATABASE_DEFAULT = sp.name COLLATE DATABASE_DEFAULT
+WHERE dp.name = N'app_legacy_svc';
+```
+
+**Interview value:** almost every UK organisation has mixed `Latin1_General_CI_AS` and `SQL_Latin1_General_CP1_CI_AS` databases from third-party vendors. Knowing `COLLATE DATABASE_DEFAULT` from real experience is an instant credibility signal in UK interviews.
+
+---
+
 ## Msg 102 — Incorrect syntax near 'GOUSE'
 
 **Symptom:** `Msg 102, Level 15, State 1 — Incorrect syntax near 'GOUSE'.`
