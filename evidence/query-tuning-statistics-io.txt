@@ -1,0 +1,162 @@
+=== PROJECT 02 — VERBATIM SET STATISTICS IO, TIME ON OUTPUT (StackOverflow2010) ===
+
+=== CS1: KEY LOOKUP vs COVERING INDEX (dbo.Users) ===
+--- CS1 BEFORE (Narrow index -> Seek + Key Lookup) ---
+Table 'Users'. Scan count 1, logical reads 56342, physical reads 140, page server reads 0, read-ahead reads 6288, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+
+ SQL Server Execution Times:
+   CPU time = 125 ms,  elapsed time = 325 ms.
+--- CS1 AFTER (Covering index -> Seek only) ---
+SQL Server parse and compile time: 
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Users'. Scan count 1, logical reads 97, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+
+ SQL Server Execution Times:
+   CPU time = 47 ms,  elapsed time = 102 ms.
+
+Completion time: 2026-10-17T20:48:28.5817218+01:00
+
+--------------------------------------------------------------------------------
+=== CS2: IMPLICIT CONVERSION (dbo.UserAccountLookup) ===
+
+(299398 rows affected)
+
+(1 row affected)
+--- CS2 BEFORE (NVARCHAR parameter -> CONVERT_IMPLICIT Scan) ---
+
+ SQL Server Execution Times:
+   CPU time = 0 ms,  elapsed time = 0 ms.
+SQL Server parse and compile time: 
+   CPU time = 0 ms, elapsed time = 1 ms.
+
+(1 row affected)
+Table 'UserAccountLookup'. Scan count 1, logical reads 1777, physical reads 0, page server reads 0, read-ahead reads 70, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+
+(1 row affected)
+
+ SQL Server Execution Times:
+   CPU time = 125 ms,  elapsed time = 192 ms.
+--- CS2 AFTER (VARCHAR parameter -> Seek) ---
+
+ SQL Server Execution Times:
+   CPU time = 0 ms,  elapsed time = 0 ms.
+SQL Server parse and compile time: 
+   CPU time = 0 ms, elapsed time = 0 ms.
+
+(1 row affected)
+Table 'UserAccountLookup'. Scan count 1, logical reads 3, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+
+(1 row affected)
+
+ SQL Server Execution Times:
+   CPU time = 0 ms,  elapsed time = 1 ms.
+
+--------------------------------------------------------------------------------
+=== CS3: NON-SARGABLE vs DATE RANGE (dbo.Users) ===
+--- CS3 BEFORE (YEAR/MONTH function -> Scan) ---
+SQL Server parse and compile time: 
+   CPU time = 6 ms, elapsed time = 6 ms.
+
+(15795 rows affected)
+Table 'Users'. Scan count 1, logical reads 1262, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+
+(1 row affected)
+
+ SQL Server Execution Times:
+   CPU time = 344 ms,  elapsed time = 473 ms.
+--- CS3 AFTER (Date range -> Seek) ---
+SQL Server parse and compile time: 
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time: 
+   CPU time = 5 ms, elapsed time = 5 ms.
+SQL Server parse and compile time: 
+   CPU time = 0 ms, elapsed time = 0 ms.
+
+(15795 rows affected)
+Table 'Users'. Scan count 1, logical reads 86, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+
+(1 row affected)
+
+ SQL Server Execution Times:
+   CPU time = 15 ms,  elapsed time = 117 ms.
+
+--------------------------------------------------------------------------------
+=== CS4: MISSING INDEX ON 3.87M ROWS (dbo.Comments) ===
+--- CS4 BEFORE (Clustered Index Scan) ---
+SQL Server parse and compile time: 
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time: 
+   CPU time = 0 ms, elapsed time = 4 ms.
+SQL Server parse and compile time: 
+   CPU time = 0 ms, elapsed time = 0 ms.
+
+(536 rows affected)
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Comments'. Scan count 13, logical reads 171982, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+
+(1 row affected)
+
+ SQL Server Execution Times:
+   CPU time = 1658 ms,  elapsed time = 503 ms.
+--- CS4 AFTER (Composite Index Seek) ---
+SQL Server parse and compile time: 
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time: 
+   CPU time = 0 ms, elapsed time = 3 ms.
+SQL Server parse and compile time: 
+   CPU time = 0 ms, elapsed time = 0 ms.
+
+(536 rows affected)
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Comments'. Scan count 1, logical reads 4, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+
+(1 row affected)
+
+ SQL Server Execution Times:
+   CPU time = 0 ms,  elapsed time = 69 ms.
+
+--------------------------------------------------------------------------------
+=== CS5: PARAMETER SNIFFING (dbo.Badges) ===
+--- CS5 WARM CACHE (Rare: Legendary) ---
+SQL Server parse and compile time: 
+   CPU time = 4 ms, elapsed time = 4 ms.
+
+ SQL Server Execution Times:
+   CPU time = 0 ms,  elapsed time = 0 ms.
+Table 'Badges'. Scan count 1, logical reads 131, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+
+ SQL Server Execution Times:
+   CPU time = 0 ms,  elapsed time = 27 ms.
+
+ SQL Server Execution Times:
+   CPU time = 15 ms,  elapsed time = 32 ms.
+--- CS5 BEFORE (Common: Student reusing cached Seek+Lookup plan) ---
+SQL Server parse and compile time: 
+   CPU time = 0 ms, elapsed time = 0 ms.
+
+ SQL Server Execution Times:
+   CPU time = 0 ms,  elapsed time = 0 ms.
+Table 'Badges'. Scan count 1, logical reads 411268, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+
+ SQL Server Execution Times:
+   CPU time = 703 ms,  elapsed time = 749 ms.
+
+ SQL Server Execution Times:
+   CPU time = 703 ms,  elapsed time = 749 ms.
+--- CS5 AFTER (Common: Student with OPTION RECOMPILE -> Scan) ---
+SQL Server parse and compile time: 
+   CPU time = 0 ms, elapsed time = 0 ms.
+
+ SQL Server Execution Times:
+   CPU time = 0 ms,  elapsed time = 0 ms.
+SQL Server parse and compile time: 
+   CPU time = 0 ms, elapsed time = 5 ms.
+Table 'Badges'. Scan count 13, logical reads 6637, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+
+ SQL Server Execution Times:
+   CPU time = 642 ms,  elapsed time = 546 ms.
+
+ SQL Server Execution Times:
+   CPU time = 642 ms,  elapsed time = 552 ms.
+
+Completion time: 2026-10-17T20:44:46.2438161+01:00

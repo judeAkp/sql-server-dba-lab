@@ -293,6 +293,37 @@ Get-Command Test-DbaLastBackup
 
 ---
 
+## Msg 308 — Index specified in the FROM clause does not exist (same-batch DDL + index hint)
+
+**Context:** creating a narrow nonclustered index (`CREATE NONCLUSTERED INDEX IX_Users_Reputation ON dbo.Users (Reputation DESC)`) and immediately running a `SELECT ... FROM dbo.Users WITH (INDEX(IX_Users_Reputation))` in the same T-SQL batch during Project 02 Case Study 1.
+
+**Symptom:**
+
+```
+Msg 308, Level 16, State 1, Line 12
+Index 'IX_Users_Reputation' on table 'dbo.Users' (specified in the FROM clause) does not exist.
+```
+
+**Diagnosis:** SQL Server compiles and binds the entire batch before executing the first statement in that batch. Deferred Name Resolution applies to *tables* created in the same batch, but **does not apply to explicit `WITH (INDEX(...))` hints** — the parser/algebrizer checks `sys.indexes` for `IX_Users_Reputation` at compile time, before the `CREATE INDEX` statement above it has executed, and aborts the batch.
+
+**Fix:** place a `GO` batch separator between `CREATE NONCLUSTERED INDEX` and the `SELECT ... WITH (INDEX(...))` statement so the DDL commits in Batch 1 before Batch 2 is compiled:
+
+```sql
+CREATE NONCLUSTERED INDEX IX_Users_Reputation
+ON dbo.Users (Reputation DESC);
+GO
+
+SELECT Id, DisplayName, Reputation, CreationDate, Location
+FROM dbo.Users WITH (INDEX(IX_Users_Reputation))
+WHERE Reputation >= 5000
+ORDER BY Reputation DESC;
+GO
+```
+
+**Prevention:** always terminate DDL statements (`CREATE`/`ALTER`/`DROP`) with `GO` when subsequent statements in the script reference the new schema object or hint it explicitly.
+
+---
+
 ## Msg 102 — Incorrect syntax near 'GOUSE'
 
 **Symptom:** `Msg 102, Level 15, State 1 — Incorrect syntax near 'GOUSE'.`
