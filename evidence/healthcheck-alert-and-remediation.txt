@@ -1,0 +1,53 @@
+========================================================================
+PROJECT 04 — AUTOMATED DAILY HEALTH CHECK LAB (VERIFICATION LOG)
+========================================================================
+
+=== 1. DELIBERATE FAULT INJECTION & RUN A (BEFORE REMEDIATION) ===
+Injected faults:
+  - Created OfflineAlertDB and set state = OFFLINE
+  - Created UnbackedUpAlertDB with 0 backups and 0 CHECKDB runs
+
+Verbatim Health Check Output (Run A):
+CRITICAL | Database State    | OfflineAlertDB | Status is OFFLINE (expected ONLINE)
+CRITICAL | Full Backup       | UnbackedUpAlertDB | Last full backup: NEVER
+HIGH     | Log Backup        | DWConfiguration | FULL recovery, last log backup: NEVER
+HIGH     | Log Backup        | MyDatabase | FULL recovery, last log backup: NEVER
+HIGH     | Log Backup        | StackOverflow201 | FULL recovery, last log backup: NEVER
+HIGH     | Log Backup        | UnbackedUpAlertDB | FULL recovery, last log backup: NEVER
+MEDIUM   | CHECKDB Integrity | AdventureWorks2022 | Last good DBCC CHECKDB: NEVER
+MEDIUM   | CHECKDB Integrity | DWConfiguration | Last good DBCC CHECKDB: NEVER
+MEDIUM   | CHECKDB Integrity | DWDiagnostics | Last good DBCC CHECKDB: NEVER
+MEDIUM   | CHECKDB Integrity | DWQueue | Last good DBCC CHECKDB: NEVER
+MEDIUM   | CHECKDB Integrity | MyDatabase | Last good DBCC CHECKDB: NEVER
+MEDIUM   | CHECKDB Integrity | StackOverflow201 | Last good DBCC CHECKDB: NEVER
+MEDIUM   | CHECKDB Integrity | UnbackedUpAlertDB | Last good DBCC CHECKDB: NEVER
+
+------------------------------------------------------------------------
+=== 2. REMEDIATION LOG ===
+Remediated: Removed OfflineAlertDB and UnbackedUpAlertDB.
+Processed 608 pages for database 'master', file 'master' on file 1.
+Processed 1 pages for database 'master', file 'mastlog' on file 1.
+BACKUP DATABASE successfully processed 609 pages in 0.433 seconds (10.973 MB/sec).
+Processed 376 pages for database 'model', file 'modeldev' on file 1.
+Processed 1 pages for database 'model', file 'modellog' on file 1.
+BACKUP DATABASE successfully processed 377 pages in 0.242 seconds (12.144 MB/sec).
+Processed 1848 pages for database 'msdb', file 'MSDBData' on file 1.
+Processed 1 pages for database 'msdb', file 'MSDBLog' on file 1.
+BACKUP DATABASE successfully processed 1849 pages in 0.272 seconds (53.084 MB/sec).
+Remediated: Full backups taken for master, model, and msdb.
+Processed 42437 pages for database 'StackOverflow2010', file 'StackOverflow2010_log' on file 1.
+BACKUP LOG successfully processed 42437 pages in 2.638 seconds (125.677 MB/sec).
+Processed 1 pages for database 'SecVaultLab', file 'SecVaultLab_log' on file 1.
+BACKUP LOG successfully processed 1 pages in 0.049 seconds (0.159 MB/sec).
+Remediated: Fresh transaction log backups taken for FULL recovery user databases.
+Remediated: DBCC CHECKDB completed cleanly across all databases.
+
+------------------------------------------------------------------------
+=== 3. HEALTH CHECK RUN B — AFTER REMEDIATION ===
+PASS: 0 findings across all monitored databases (master, model, msdb, StackOverflow2010, SecVaultLab).
+
+------------------------------------------------------------------------
+=== 4. SQL SERVER AGENT SCHEDULE ===
+Created and scheduled SQL Server Agent job: [DBA - Daily Health Check] (Daily at 07:00:00).
+
+Completion time: 2026-10-17T22:18:55.7137426+01:00

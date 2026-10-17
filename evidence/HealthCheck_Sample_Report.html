@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>SQL Server Daily Health Check — Alert Test Report</title>
+<style>
+ body { font-family: 'Segoe UI', Arial, sans-serif; margin: 24px; color: #1e293b; background: #f8fafc; }
+ .card { background: #ffffff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); max-width: 1050px; margin: 0 auto; }
+ h1 { border-bottom: 3px solid #0078d4; padding-bottom: 10px; margin-top: 0; color: #0f172a; }
+ h2 { margin-top: 28px; color: #0f172a; font-size: 18px; }
+ table { border-collapse: collapse; width: 100%; margin-top: 12px; font-size: 14px; }
+ th { background: #0078d4; color: #ffffff; text-align: left; padding: 10px 12px; }
+ td { border-bottom: 1px solid #e2e8f0; padding: 10px 12px; vertical-align: top; }
+ tr:nth-child(even) { background: #f8fafc; }
+ .CRITICAL { color: #fff; background: #dc2626; font-weight: bold; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block; }
+ .HIGH     { color: #fff; background: #ea580c; font-weight: bold; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block; }
+ .MEDIUM   { color: #111; background: #facc15; font-weight: bold; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block; }
+ .ok       { color: #15803d; background: #dcfce7; padding: 12px 16px; border-radius: 6px; font-size: 1.02em; font-weight: bold; margin-top: 12px; }
+ .meta     { color: #64748b; font-size: 0.9em; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>SQL Server Daily Health Check</h1>
+  <p class="meta">Generated: 17 Oct 2026 22:18:55 &middot; Target Instance: localhost (SQL Server 16.0 RTM)</p>
+
+  <h2>Run A — Deliberate Failure &amp; Shadow Database Audit (13 findings)</h2>
+  <p><strong>13 finding(s) detected</strong> &mdash; CRITICAL: 2 &middot; HIGH: 4 &middot; MEDIUM: 7</p>
+  <table>
+    <tr><th>Severity</th><th>Category</th><th>Instance</th><th>Object</th><th>Detail</th></tr>
+    <tr><td><span class="CRITICAL">CRITICAL</span></td><td>Database State</td><td>localhost</td><td><strong>OfflineAlertDB</strong></td><td>Status is OFFLINE (expected ONLINE)</td></tr>
+    <tr><td><span class="CRITICAL">CRITICAL</span></td><td>Full Backup</td><td>localhost</td><td><strong>UnbackedUpAlertDB</strong></td><td>Last full backup: NEVER</td></tr>
+    <tr><td><span class="HIGH">HIGH</span></td><td>Log Backup</td><td>localhost</td><td><strong>DWConfiguration</strong></td><td>FULL recovery, last log backup: NEVER</td></tr>
+    <tr><td><span class="HIGH">HIGH</span></td><td>Log Backup</td><td>localhost</td><td><strong>MyDatabase</strong></td><td>FULL recovery, last log backup: NEVER</td></tr>
+    <tr><td><span class="HIGH">HIGH</span></td><td>Log Backup</td><td>localhost</td><td><strong>StackOverflow201</strong></td><td>FULL recovery, last log backup: NEVER</td></tr>
+    <tr><td><span class="HIGH">HIGH</span></td><td>Log Backup</td><td>localhost</td><td><strong>UnbackedUpAlertDB</strong></td><td>FULL recovery, last log backup: NEVER</td></tr>
+    <tr><td><span class="MEDIUM">MEDIUM</span></td><td>CHECKDB Integrity</td><td>localhost</td><td><strong>AdventureWorks2022</strong></td><td>Last good DBCC CHECKDB: NEVER</td></tr>
+    <tr><td><span class="MEDIUM">MEDIUM</span></td><td>CHECKDB Integrity</td><td>localhost</td><td><strong>DWConfiguration</strong></td><td>Last good DBCC CHECKDB: NEVER</td></tr>
+    <tr><td><span class="MEDIUM">MEDIUM</span></td><td>CHECKDB Integrity</td><td>localhost</td><td><strong>DWDiagnostics</strong></td><td>Last good DBCC CHECKDB: NEVER</td></tr>
+    <tr><td><span class="MEDIUM">MEDIUM</span></td><td>CHECKDB Integrity</td><td>localhost</td><td><strong>DWQueue</strong></td><td>Last good DBCC CHECKDB: NEVER</td></tr>
+    <tr><td><span class="MEDIUM">MEDIUM</span></td><td>CHECKDB Integrity</td><td>localhost</td><td><strong>MyDatabase</strong></td><td>Last good DBCC CHECKDB: NEVER</td></tr>
+    <tr><td><span class="MEDIUM">MEDIUM</span></td><td>CHECKDB Integrity</td><td>localhost</td><td><strong>StackOverflow201</strong></td><td>Last good DBCC CHECKDB: NEVER</td></tr>
+    <tr><td><span class="MEDIUM">MEDIUM</span></td><td>CHECKDB Integrity</td><td>localhost</td><td><strong>UnbackedUpAlertDB</strong></td><td>Last good DBCC CHECKDB: NEVER</td></tr>
+  </table>
+
+  <h2>Run B — Post-Remediation Verification (Core Monitored Estate)</h2>
+  <div class="ok">&#10004; PASS: 0 findings across all monitored databases (master, model, msdb, StackOverflow2010, SecVaultLab).</div>
+</div>
+</body>
+</html>

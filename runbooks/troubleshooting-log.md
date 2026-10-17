@@ -410,6 +410,36 @@ WHERE dp.name = N'app_legacy_svc';
 
 ---
 
+## `Msg 451` — Collation conflict between `Latin1_General_CI_AS_KS_WS` and `Latin1_General_CI_AS` inside `sys.databases`
+
+**Context:** building a `UNION ALL` health-check query in Project 04 that concatenated `sys.databases.name` with `sys.databases.state_desc`.
+
+**Symptom:**
+
+```
+Msg 451, Level 16, State 1
+Cannot resolve collation conflict between "Latin1_General_CI_AS_KS_WS" and "Latin1_General_CI_AS" in add operator occurring in SELECT statement column 1.
+```
+
+**Diagnosis:** even within a single system catalog view (`sys.databases`), Microsoft does not use the same collation on every string column!
+- `sys.databases.name` uses the server/catalog collation (`Latin1_General_CI_AS`).
+- Internal status description columns (`state_desc`, `recovery_model_desc`, `log_reuse_wait_desc`) are generated from internal engine metadata using `Latin1_General_CI_AS_KS_WS` (Kana-sensitive, Width-sensitive).
+When one branch of a `UNION ALL` produces a string containing `state_desc` (`_KS_WS`) and another branch produces a string containing only `name` + string literals (`Latin1_General_CI_AS`), concatenating them in the outer `SELECT` fails with `Msg 451`.
+
+**Fix:** normalise catalog enum columns with `COLLATE DATABASE_DEFAULT` in the base CTE:
+
+```sql
+SELECT
+    d.name                COLLATE DATABASE_DEFAULT AS DatabaseName,
+    d.state_desc          COLLATE DATABASE_DEFAULT AS StateDesc,
+    d.recovery_model_desc COLLATE DATABASE_DEFAULT AS RecoveryModel
+FROM sys.databases d;
+```
+
+**Prevention:** whenever concatenating or unioning `*_desc` columns from SQL Server catalog views (`sys.databases`, `sys.master_files`, `sys.objects`), apply `COLLATE DATABASE_DEFAULT` at the source column.
+
+---
+
 ## Msg 102 — Incorrect syntax near 'GOUSE'
 
 **Symptom:** `Msg 102, Level 15, State 1 — Incorrect syntax near 'GOUSE'.`
