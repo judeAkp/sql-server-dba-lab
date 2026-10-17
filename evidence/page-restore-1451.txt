@@ -1,0 +1,20 @@
+=== Drill 4: Surgical Single-Page Restore (DbaDrillLab, Page 1:1451) ===
+
+1. CorruptionLabRun Tracking Table (master.dbo.CorruptionLabRun):
+
+RunID  FileID  PageID  CorruptedAt              RepairedAt               RepairDuration
+1      1       1451    2026-10-17 16:53:05.169  2026-10-17 16:54:05.808  60.639 seconds
+2      1       1451    2026-10-17 16:55:51.575  2026-10-17 17:01:15.030  323.455 seconds
+
+--------------------------------------------------------------------------------
+2. Backup & Rollforward Chain Recorded in msdb.dbo.backupset (DbaDrillLab):
+
+database_name  backup_type  backup_start_date        uncompressed_mb  compressed_mb  first_lsn          last_lsn           physical_device_name
+DbaDrillLab    FULL         2026-10-17 16:52:32.000  13.08            0.98           43000000687600001  43000000687900001  C:\SQLBackup\DRILL\DbaDrillLab_FULL.bak
+DbaDrillLab    LOG          2026-10-17 16:53:30.000  0.07             0.07           43000000687600001  43000000700400001  C:\SQLBackup\DRILL\DbaDrillLab_TAIL.trn
+DbaDrillLab    LOG          2026-10-17 17:00:06.000  0.07             0.07           43000000700400001  43000000708300001  C:\SQLBackup\DRILL\DbaDrillLab_TAIL.trn
+
+--------------------------------------------------------------------------------
+3. Verification post-repair:
+- SELECT COUNT(*) FROM DbaDrillLab.dbo.CorruptMe;  --> 20,000 rows (0 data loss)
+- DBCC CHECKDB (N'DbaDrillLab') WITH NO_INFOMSGS;  --> Command(s) completed successfully (0 errors)

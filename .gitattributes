@@ -1,4 +1,16 @@
-﻿* text=auto eol=lf
+# Line endings
+#
+# Git normally stores text with LF internally and converts to CRLF on checkout
+# on Windows (core.autocrlf=true). That produces the GitHub Desktop notice:
+#   "This file uses 'LF' line endings, but Git is configured to convert them to
+#    'CRLF' the next time the file is checked out."
+# Nothing is broken — this file just makes the behaviour explicit and identical
+# for anyone who clones the repo on Windows, macOS or Linux.
+#
+# Rule: text is stored as LF in the repository; Windows-native file types are
+# checked out as CRLF so they behave the way SSMS, PowerShell and Notepad expect.
+
+* text=auto eol=lf
 
 # Windows-native formats — CRLF on checkout
 *.sql    text eol=crlf
@@ -15,7 +27,7 @@
 *.yml    text eol=lf
 *.yaml   text eol=lf
 *.json   text eol=lf
-.gitignore     text eol=lf
+.gitignore    text eol=lf
 .gitattributes text eol=lf
 
 # Binary — never touch, never diff
@@ -26,6 +38,8 @@
 *.pdf    binary
 *.zip    binary
 *.7z     binary
+
+# Database and backup artefacts (also excluded by .gitignore — belt and braces)
 *.bak    binary
 *.trn    binary
 *.mdf    binary

@@ -1,0 +1,20 @@
+=== Drill 6: Damaged Backup Detection (HEADERONLY vs VERIFYONLY WITH CHECKSUM) ===
+
+Scenario:
+Copied C:\SQLBackup\DRILL\CHAIN_01_full.bak to C:\SQLBackup\DRILL\CHAIN_01_full_DAMAGED.bak
+and overwrote 4,096 bytes in the middle of the file to simulate media bit rot.
+
+1. RESTORE HEADERONLY FROM DISK = N'C:\SQLBackup\DRILL\CHAIN_01_full_DAMAGED.bak';
+   Result: SUCCEEDED (1 row returned). HEADERONLY only inspects the backup header metadata
+   at the start of the file and does not validate page checksums across the backup payload.
+
+2. RESTORE VERIFYONLY FROM DISK = N'C:\SQLBackup\DRILL\CHAIN_01_full_DAMAGED.bak' WITH CHECKSUM;
+   Result: FAILED immediately:
+   Msg 3189, Level 16, State 1
+   Damage to the backup set was detected.
+   Msg 3013, Level 16, State 1
+   VERIFY DATABASE is terminating abnormally.
+
+Conclusion:
+Always take backups WITH CHECKSUM and validate with RESTORE VERIFYONLY ... WITH CHECKSUM
+(or a full test restore + DBCC CHECKDB via Test-DbaLastBackup).

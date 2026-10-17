@@ -1,0 +1,28 @@
+=== Drill 5: Broken Differential Chain (Msg 3136) & COPY_ONLY Proof ===
+
+1. SSMS Output — Attempt 2 (Restoring F1 = CHAIN_01_full.bak, then applying D2 = CHAIN_04_diff.bak):
+
+Processed 504 pages for database 'ChainTest2', file 'ChainLab' on file 1.
+Processed 1 pages for database 'ChainTest2', file 'ChainLab_log' on file 1.
+RESTORE DATABASE successfully processed 505 pages in 0.021 seconds (187.569 MB/sec).
+Msg 3136, Level 16, State 1, Line 7
+This differential backup cannot be restored because the database has not been restored to the correct earlier state.
+Msg 3013, Level 16, State 1, Line 7
+RESTORE DATABASE is terminating abnormally.
+
+Completion time: 2026-10-17T17:03:48.8046595+01:00
+
+--------------------------------------------------------------------------------
+2. Forensic LSN Proof from msdb.dbo.backupset (ChainLab):
+
+database_name  backup_type  is_copy_only  first_lsn          last_lsn           differential_base_lsn  physical_device_name
+ChainLab       FULL         0             39000000105500001  39000000105800001  NULL                   C:\SQLBackup\DRILL\CHAIN_01_full.bak
+ChainLab       DIFF         0             39000000115600001  39000000115900001  39000000105500001      C:\SQLBackup\DRILL\CHAIN_02_diff.bak
+ChainLab       FULL         0             39000000125300001  39000000125600001  NULL                   C:\SQLBackup\DRILL\CHAIN_03_full.bak
+ChainLab       DIFF         0             39000000135700001  39000000136000001  39000000125300001      C:\SQLBackup\DRILL\CHAIN_04_diff.bak
+ChainLab       FULL         1             39000000136600001  39000000136900001  NULL                   C:\SQLBackup\DRILL\CHAIN_05_full_copyonly.bak
+ChainLab       DIFF         0             39000000144400001  39000000144700001  39000000125300001      C:\SQLBackup\DRILL\CHAIN_06_diff.bak
+
+Key takeaway:
+- CHAIN_04_diff.bak has differential_base_lsn = 39000000125300001 (which is CHAIN_03_full.bak's first_lsn, NOT CHAIN_01_full.bak's first_lsn 39000000105500001).
+- CHAIN_06_diff.bak ALSO has differential_base_lsn = 39000000125300001, proving that CHAIN_05_full_copyonly.bak (is_copy_only = 1) did NOT reset the differential base.

@@ -10,11 +10,11 @@ Every runbook in this repository has been **executed and verified** in the lab, 
 
 | | |
 |---|---|
-| **Engine** | SQL Server 2022 Developer Edition (16.0) |
-| **Tools** | SSMS 21, Azure Data Studio, PowerShell 7 + dbatools |
+| **Engine** | SQL Server 2022 Developer Edition (16.0 RTM) |
+| **Tools** | SSMS, Azure Data Studio, PowerShell + dbatools |
 | **Host** | Windows 11, Hyper-V VMs for multi-node work |
-| **Sample data** | StackOverflow2010 (~10 GB), AdventureWorks2022, WideWorldImporters |
-| **Storage layout** | `C:\SQLData` / `C:\SQLLogs` / `C:\SQLBackup` (separated) |
+| **Sample data** | StackOverflow2010 (~10 GB), DbaDrillLab, ChainLab |
+| **Storage layout** | `C:\SQLData` / `C:\SQLLogs` / `C:\SQLBackup` (separated, IFI enabled) |
 
 ---
 
@@ -22,7 +22,7 @@ Every runbook in this repository has been **executed and verified** in the lab, 
 
 | Project | What it demonstrates | Status |
 |---|---|---|
-| [01 — Backup & Recovery Strategy](projects/01-backup-recovery-strategy.md) | Full/diff/log chain, point-in-time restore, verified RPO 15 min / RTO 30 min | 🟡 |
+| [01 — Backup & Recovery Strategy](projects/01-backup-recovery-strategy.md) | Full/diff/log chain, STOPAT point-in-time restore (10,001 rows, 0 data loss), 60s surgical page restore (`1:1451`), LSN chain proof | ✅ |
 | [02 — Query Tuning Case Studies](projects/02-query-tuning-case-studies.md) | 5 tuned queries with before/after logical reads and plans | 🔲 |
 | [03 — Security Hardening Baseline](projects/03-security-hardening.md) | Least-privilege roles, audit, UK GDPR considerations | 🔲 |
 | [04 — Automated Health Check](projects/04-automated-healthcheck.md) | PowerShell + dbatools daily report, Agent-scheduled | 🔲 |
@@ -37,11 +37,11 @@ Every runbook in this repository has been **executed and verified** in the lab, 
 
 Operational procedures written for use under pressure — numbered steps, exact T-SQL, no prose.
 
-- [Disaster Recovery](runbooks/disaster-recovery.md) — point-in-time restore, tail-log backup, master rebuild
+- [Disaster Recovery](runbooks/disaster-recovery.md) — point-in-time restore, tail-log backup, single-page restore, master rebuild
 - [Slow Server Triage](runbooks/slow-server-triage.md) — first 10 minutes when "the database is slow"
 - [Security Hardening Baseline](projects/03-security-hardening.md) — least privilege, audit, UK GDPR considerations
 - [New Instance Build](runbooks/new-instance-build-checklist.md) — install decisions and post-install config
-- [Troubleshooting Log](runbooks/troubleshooting-log.md) — real errors hit in this lab and how they were resolved
+- [Troubleshooting Log](runbooks/troubleshooting-log.md) — real errors hit in this lab (`Msg 5120`, `207`, `208`, `4208`, `3194/3117`, `3136`, PowerShell ExecutionPolicy) and how they were resolved
 
 ---
 
@@ -65,6 +65,6 @@ Concept notes written while learning — architecture, system databases, storage
 
 ## About
 
-Career-changer moving from SQL development into database administration. Building this lab publicly to document the work rather than just claim it.
+Transitioning from SQL/data work into SQL Server Database Administration. Building this lab publicly to document hands-on operational work and verified recovery drills rather than just claiming them.
 
-📍 Wakefield, UK · Open to Junior DBA / Database Support roles
+📍 UK · Open to Junior SQL Server DBA / Database Support roles
