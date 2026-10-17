@@ -1,0 +1,31 @@
+# Never commit these
+*.bak
+*.trn
+*.mdf
+*.ndf
+*.ldf
+*.bacpac
+*.7z
+*.zip
+
+# Credentials
+*credentials*
+*password*
+*.pfx
+*.pvk
+*.cer
+appsettings.*.json
+*.publishsettings
+
+# OS / editor
+Thumbs.db
+.DS_Store
+desktop.ini
+.vs/
+.vscode/
+*.suo
+*.user
+
+# Reports and logs
+Reports/
+*.log

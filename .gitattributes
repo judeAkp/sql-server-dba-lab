@@ -1,0 +1,34 @@
+﻿* text=auto eol=lf
+
+# Windows-native formats — CRLF on checkout
+*.sql    text eol=crlf
+*.ps1    text eol=crlf
+*.psm1   text eol=crlf
+*.psd1   text eol=crlf
+*.bat    text eol=crlf
+*.cmd    text eol=crlf
+*.kql    text eol=crlf
+
+# Documentation and config — LF everywhere
+*.md     text eol=lf
+*.txt    text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.json   text eol=lf
+.gitignore     text eol=lf
+.gitattributes text eol=lf
+
+# Binary — never touch, never diff
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.pdf    binary
+*.zip    binary
+*.7z     binary
+*.bak    binary
+*.trn    binary
+*.mdf    binary
+*.ldf    binary
+*.ndf    binary
+*.bacpac binary
