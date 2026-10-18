@@ -1,0 +1,46 @@
+========================================================================
+PROJECT 05 — HIGH AVAILABILITY, HADR ENDPOINT & FAILOVER DRILL
+========================================================================
+ 
+=== 1. HADR STATUS & TCP 5022 DATA_MIRRORING ENDPOINT ===
+Verified: [Hadr_endpoint] is STARTED on TCP port 5022 with AES encryption.
+Captured expected HADR pre-requisite -> Msg 47105: The Always On Availability Groups feature must be enabled for this server instance before you can perform availability group operations. Please enable the feature, then retry the operation.
+ 
+=== 2. WARM-STANDBY INITIALIZATION & READABLE SECONDARY TEST ===
+Processed 464 pages for database 'HA_PrimaryDB', file 'HA_PrimaryDB' on file 1.
+Processed 1 pages for database 'HA_PrimaryDB', file 'HA_PrimaryDB_log' on file 1.
+BACKUP DATABASE successfully processed 465 pages in 0.106 seconds (34.211 MB/sec).
+Processed 464 pages for database 'HA_SecondaryDB', file 'HA_PrimaryDB' on file 1.
+Processed 1 pages for database 'HA_SecondaryDB', file 'HA_PrimaryDB_log' on file 1.
+RESTORE DATABASE successfully processed 465 pages in 0.030 seconds (120.882 MB/sec).
+PASS [Readable Secondary]: SELECT on HA_SecondaryDB returned 1000 rows.
+PASS [Write Protection]: Write on HA_SecondaryDB blocked -> Msg 3906: Failed to update database "HA_SecondaryDB" because the database is read-only.
+ 
+=== 3. LOG SHIPPING REPLICATION TEST (+500 ROWS -> 1,500 TOTAL) ===
+Processed 12 pages for database 'HA_PrimaryDB', file 'HA_PrimaryDB_log' on file 1.
+BACKUP LOG successfully processed 12 pages in 0.007 seconds (12.765 MB/sec).
+Processed 0 pages for database 'HA_SecondaryDB', file 'HA_PrimaryDB' on file 1.
+Processed 12 pages for database 'HA_SecondaryDB', file 'HA_PrimaryDB_log' on file 1.
+RESTORE LOG successfully processed 12 pages in 0.007 seconds (12.765 MB/sec).
+Synchronization verified: Primary rows = 1500 | Readable Secondary rows = 1500.
+ 
+=== 4. PLANNED ZERO-DATA-LOSS FAILOVER (ROLE SWAP) ===
+Processed 7 pages for database 'HA_PrimaryDB', file 'HA_PrimaryDB_log' on file 1.
+BACKUP LOG successfully processed 7 pages in 0.006 seconds (7.893 MB/sec).
+Processed 0 pages for database 'HA_SecondaryDB', file 'HA_PrimaryDB' on file 1.
+Processed 7 pages for database 'HA_SecondaryDB', file 'HA_PrimaryDB_log' on file 1.
+RESTORE LOG successfully processed 7 pages in 0.010 seconds (4.736 MB/sec).
+Role swap completed in 901 ms (0 data loss).
+Processed 4 pages for database 'HA_SecondaryDB', file 'HA_PrimaryDB_log' on file 1.
+BACKUP LOG successfully processed 4 pages in 0.004 seconds (6.103 MB/sec).
+Processed 0 pages for database 'HA_PrimaryDB', file 'HA_PrimaryDB' on file 1.
+Processed 4 pages for database 'HA_PrimaryDB', file 'HA_PrimaryDB_log' on file 1.
+RESTORE LOG successfully processed 4 pages in 0.003 seconds (8.138 MB/sec).
+Post-Failover Role States:
+  - HA_SecondaryDB (NEW PRIMARY, Read-Write): 1500 rows.
+  - HA_PrimaryDB   (NEW SECONDARY, Standby) : 1500 rows.
+RESTORE DATABASE successfully processed 0 pages in 0.564 seconds (0.000 MB/sec).
+ 
+Cleanup complete: Dropped HA_PrimaryDB and HA_SecondaryDB (Hadr_endpoint retained on TCP 5022).
+
+Completion time: 2026-10-17T23:15:25.4326250+01:00

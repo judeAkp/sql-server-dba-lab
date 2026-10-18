@@ -440,6 +440,79 @@ FROM sys.databases d;
 
 ---
 
+## `Msg 47105` — Always On Availability Groups feature must be enabled before performing AG operations
+
+**Context:** testing `CREATE AVAILABILITY GROUP ... WITH (CLUSTER_TYPE = NONE)` after creating the `TCP 5022` `DATA_MIRRORING` endpoint in Project 05.
+
+**Symptom:**
+
+```
+Msg 47105, Level 16, State 1
+The Always On Availability Groups feature must be enabled for this server instance before you can perform availability group operations. Please enable the feature, then retry the operation.
+```
+
+**Diagnosis:** even for a clusterless (`CLUSTER_TYPE = NONE`) Availability Group that does not require a multi-node WSFC quorum, SQL Server Configuration Manager on Windows checks for the **Windows Server Failover Clustering (`Failover-Clustering` / `ClusSvc`)** OS feature before unlocking the **Always On High Availability** tab.
+- Even when running **SQL Server 2022 Developer Edition** (which unlocks all Enterprise engine features such as TDE, Page Compression, and `DATA_MIRRORING` endpoints), **Windows 11 is a client operating system** and does not include the Windows Server `Failover-Clustering` feature — so the **Always On High Availability** tab in SQL Server Configuration Manager is disabled/unavailable by design on Windows 11.
+
+**Fix / Architectural Resolution:**
+1. On **Windows Server** hosts, install the OS feature first (`Install-WindowsFeature -Name Failover-Clustering -IncludeManagementTools`), then enable HADR (`Enable-DbaAgHadr -SqlInstance localhost -Force`).
+2. On a single **Windows 11** lab host, use the `DATA_MIRRORING` endpoint (`TCP 5022`) and **Warm-Standby Log Shipping (`RESTORE ... WITH STANDBY`)** to execute and verify readable secondaries and sub-second (`901 ms`) zero-data-loss role-swap failovers without requiring Windows Server OS licensing.
+
+---
+
+## `Msg 2628` — Verbose string truncation (`String or binary data would be truncated in table ... column ...`)
+
+**Context:** inserting a 53-character post-failover batch label (`'Batch 3: Written to Promoted Secondary after Failover'`) into `BatchLabel varchar(40)` on the newly promoted primary database `HA_SecondaryDB`.
+
+**Symptom:**
+
+```
+Msg 2628, Level 16, State 1
+String or binary data would be truncated in table 'HA_SecondaryDB.dbo.Transactions', column 'BatchLabel'. Truncated value: 'Batch 3: Written to Promoted Secondary a'.
+The statement has been terminated.
+```
+
+**Diagnosis & SQL Server 2019/2022 Upgrade Note:**
+1. The fact that `INSERT HA_SecondaryDB.dbo.Transactions` reached column-length validation (`Msg 2628`) rather than `Msg 3906 (database is read-only)` proved `HA_SecondaryDB` had already transitioned to Read-Write Primary mode after the `901 ms` tail-log role swap.
+2. Prior to SQL Server 2019 (`COMPATIBILITY_LEVEL >= 150`), this error was the infamous **`Msg 8152`** (*"String or binary data would be truncated"*), which did not identify which table, column, or row failed. Under SQL Server 2022 (`160`), **`Msg 2628` pinpoints the exact table, column, and truncated value immediately**.
+
+**Fix:** widened `BatchLabel` from `varchar(40)` to `varchar(80)`.
+
+---
+
+## `Msg 5061` & `Msg 12819` — `ALTER DATABASE SET CONTAINMENT = PARTIAL` lock contention and cascade failure
+
+**Context:** enabling Partial Containment on `StackOverflow2010` in Project 06 (`ALTER DATABASE StackOverflow2010 SET CONTAINMENT = PARTIAL`) before converting `[app_legacy_svc]` to a Contained Database User with `sp_migrate_user_to_contained`.
+
+**Symptom:**
+
+```
+Msg 5061, Level 16, State 1
+ALTER DATABASE failed because a lock could not be placed on database 'StackOverflow2010'. Try again later.
+Msg 5069, Level 16, State 1
+ALTER DATABASE statement failed.
+Msg 12819, Level 16, State 1, Procedure sys.sp_migrate_user_to_contained
+sp_migrate_user_to_contained cannot be used in a non-contained database (a database with CONTAINMENT set to NONE).
+```
+
+**Diagnosis:**
+1. Changing database containment requires an **Exclusive (`X`) database lock** on `StackOverflow2010`. Because SSMS Object Explorer and an earlier query tab still held Shared (`S`) database locks on `StackOverflow2010`, `ALTER DATABASE` could not acquire the `X` lock and failed with `Msg 5061`.
+2. `Msg 12819` was a cascade failure: because `ALTER DATABASE` failed, `StackOverflow2010` remained at `CONTAINMENT = NONE`, so `sp_migrate_user_to_contained` refused to run.
+
+**Fix:** force exclusive access by transitioning through `SINGLE_USER WITH ROLLBACK IMMEDIATE` in `master`, applying the containment and compatibility-level changes, and returning to `MULTI_USER`:
+
+```sql
+USE master;
+GO
+ALTER DATABASE StackOverflow2010 SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+ALTER DATABASE StackOverflow2010 SET CONTAINMENT = PARTIAL;
+ALTER DATABASE StackOverflow2010 SET COMPATIBILITY_LEVEL = 160;
+ALTER DATABASE StackOverflow2010 SET MULTI_USER;
+GO
+```
+
+---
+
 ## Msg 102 — Incorrect syntax near 'GOUSE'
 
 **Symptom:** `Msg 102, Level 15, State 1 — Incorrect syntax near 'GOUSE'.`

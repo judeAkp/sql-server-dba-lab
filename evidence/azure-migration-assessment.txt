@@ -1,0 +1,32 @@
+========================================================================
+PROJECT 06 — AZURE SQL MIGRATION READINESS & CONTAINED USER LAB
+========================================================================
+ 
+=== 1. INJECTING LEGACY MIGRATION BLOCKERS INTO StackOverflow2010 ===
+Injected: dbo.usp_LegacyCrossDbReport (cross-DB reference to msdb) and dbo.LegacyStagingHeap (Heap).
+ 
+=== 2. AZURE SQL DB READINESS ASSESSMENT — BEFORE REMEDIATION ===
+BLOCKER [Cross-DB Query]   | usp_LegacyCrossDbReport references external DB [msdb].[dbo].[backupset]
+WARNING [Heap Table]       | dbo.LegacyStagingHeap has no Clustered Index (index_id = 0)
+WARNING [Non-Contained Usr]| User [app_legacy_svc] is mapped to master login (INSTANCE) -> migrate to Contained User
+ 
+=== 3. REMEDIATING BLOCKERS & CONVERTING TO CONTAINED DATABASE ===
+Initial attempt with shared locks open on StackOverflow2010:
+  Msg 5061, Level 16, State 1: ALTER DATABASE failed because a lock could not be placed on database 'StackOverflow2010'.
+  Msg 12819, Level 16, State 1: sp_migrate_user_to_contained cannot be used in a non-contained database (CONTAINMENT set to NONE).
+Resolved by switching to SINGLE_USER WITH ROLLBACK IMMEDIATE before enabling CONTAINMENT = PARTIAL and COMPATIBILITY_LEVEL = 160, then migrating [app_legacy_svc] via sp_migrate_user_to_contained and dropping dbo.usp_LegacyCrossDbReport and dbo.LegacyStagingHeap.
+ 
+=== 4. AZURE SQL DB READINESS ASSESSMENT — AFTER REMEDIATION ===
+Remaining Azure SQL Database migration blockers: 0 (STATUS: 100% READY FOR AZURE SQL DATABASE / BACPAC MIGRATION).
+ 
+=== 5. FOOTPRINT & AZURE SKU SIZING SUMMARY (Target: uksouth) ===
+Database               : StackOverflow2010
+Compatibility Level    : 100 (Upgraded to 160)
+Containment State      : PARTIAL
+User Tables            : 11
+Total Rows (All Tables): 19610103
+Allocated Data Size    : 8820.38 MB
+Allocated Log Size     : 511.94 MB
+Recommended Azure Target: Azure SQL Database (PaaS) | Region: uksouth (London) | Tier: Standard S2 (50 DTUs, 250 GB max) or GP_S_Gen5_2 Serverless
+
+Completion time: 2026-10-18T01:04:20.5462898+01:00
